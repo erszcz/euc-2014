@@ -1,8 +1,9 @@
 Vagrant.configure "2" do |config|
 
   # See https://github.com/mitchellh/vagrant/wiki/Available-Vagrant-Boxes for more boxes.
-  config.vm.box     = "precise64_base"
-  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+  config.vm.box      = "precise64_base"
+  config.vm.box_url  = "http://files.vagrantup.com/precise64.box"
+  config.vm.hostname = "euc-mim-1"
 
   # change default username if needed
   # config.ssh.username = "travis"
