@@ -29,3 +29,15 @@
   testing to work
 - XMPP version 1.0 for ejabberd/MongooseIM causes the server
   to refuse plaintext authentication
+
+
+## Steps
+
+### Intro
+
+To start the first virtual machine:
+
+    git clone euc-2014-tsung
+    cd euc-2014-tsung
+    git submodule update -i
+    vagrant up
