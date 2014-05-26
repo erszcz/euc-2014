@@ -6,7 +6,7 @@ Vagrant.configure "2" do |config|
   config.vm.hostname = "euc-mim-1"
 
   # change default username if needed
-  # config.ssh.username = "travis"
+  config.ssh.username = "vagrant"
 
   config.vm.provider "virtualbox" do |vm|
     # changing nictype partially helps with Vagrant issue #516, VirtualBox NAT interface chokes when
