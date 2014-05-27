@@ -1,15 +1,19 @@
 hosts = [
     {
         :name => "mim-1",
+        :ip => "172.28.128.11"
     },
     {
         :name => "mim-2",
+        :ip => "172.28.128.12"
     },
     {
         :name => "tsung-1",
+        :ip => "172.28.128.21"
     },
     {
         :name => "tsung-2",
+        :ip => "172.28.128.22"
     }
 ]
 
@@ -23,9 +27,9 @@ Vagrant.configure "2" do |config|
   hosts.each do |host|
       config.vm.define host[:name] do |host_config|
           host_config.vm.hostname = host[:name]
+          config.vm.network "private_network", ip: host[:ip]
       end
   end
-  config.vm.network "private_network", type: "dhcp"
 
   # change default username if needed
   config.ssh.username = "vagrant"
