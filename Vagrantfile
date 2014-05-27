@@ -53,6 +53,7 @@ Vagrant.configure "2" do |config|
     chef.log_level      = :debug
 
     # List the recipies you are going to work on/need.
+    chef.add_recipe     "euc2014"
     chef.add_recipe     "build-essential"
     chef.add_recipe     "vim"
     chef.add_recipe     "git"
