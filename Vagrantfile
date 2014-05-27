@@ -1,3 +1,18 @@
+hosts = [
+    {
+        :name => "mim-1",
+    },
+    {
+        :name => "mim-2",
+    },
+    {
+        :name => "tsung-1",
+    },
+    {
+        :name => "tsung-2",
+    }
+]
+
 Vagrant.configure "2" do |config|
 
   # See https://github.com/mitchellh/vagrant/wiki/Available-Vagrant-Boxes for more boxes.
@@ -5,11 +20,12 @@ Vagrant.configure "2" do |config|
   config.vm.box_url  = "http://files.vagrantup.com/precise64.box"
 
   # Define 4 machines for this tutorial.
-  ["mim-1", "mim-2", "tsung-1", "tsung-2"].each do |hostname|
-      config.vm.define hostname do |host|
-          host.vm.hostname = hostname
+  hosts.each do |host|
+      config.vm.define host[:name] do |host_config|
+          host_config.vm.hostname = host[:name]
       end
   end
+  config.vm.network "private_network", type: "dhcp"
 
   # change default username if needed
   config.ssh.username = "vagrant"
