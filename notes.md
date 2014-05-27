@@ -36,9 +36,11 @@
 
 ### Intro
 
-To start the first virtual machine:
+To create and provision the virtual machines:
 
     git clone euc-2014-tsung
     cd euc-2014-tsung
     git submodule update -i
     vagrant up
+    vagrant ssh [mim-1 | mim-2 | tsung-1 | tsung-2]
+    . otp/17.0/activate
