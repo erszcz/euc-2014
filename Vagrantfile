@@ -43,11 +43,11 @@ Vagrant.configure "2" do |config|
     # List the recipies you are going to work on/need.
     chef.add_recipe     "build-essential"
     chef.add_recipe     "networking_basic"
-    chef.add_recipe     "travis_build_environment"
-    chef.add_recipe     "git"
-    chef.add_recipe     "java::openjdk7"
-    chef.add_recipe     "kerl"
     chef.add_recipe     "vim"
+    #chef.add_recipe     "travis_build_environment"
+    #chef.add_recipe     "git"
+    #chef.add_recipe     "java::openjdk7"
+    #chef.add_recipe     "kerl"
   end
 
 end
