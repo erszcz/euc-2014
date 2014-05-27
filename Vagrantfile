@@ -42,8 +42,8 @@ Vagrant.configure "2" do |config|
   config.vm.provision :shell do |sh|
     sh.inline = <<-EOF
       sudo apt-get update
-      sudo apt-get install --assume-yes ruby1.9.1-dev build-essential
-      gem install chef --no-ri --no-rdoc --no-user-install
+      sudo apt-get install --no-install-recommends --assume-yes ruby1.9.1-dev build-essential
+      [ -x "/opt/vagrant_ruby/bin/chef-solo" ] || gem install chef --no-ri --no-rdoc --no-user-install
     EOF
   end
 
@@ -52,18 +52,11 @@ Vagrant.configure "2" do |config|
     chef.cookbooks_path = ["cookbooks/ci_environment"]
     chef.log_level      = :debug
 
-    # Highly recommended to keep apt packages metadata in sync and
-    # be able to use apt mirrors.
-    chef.add_recipe     "apt"
-
     # List the recipies you are going to work on/need.
     chef.add_recipe     "build-essential"
-    chef.add_recipe     "networking_basic"
     chef.add_recipe     "vim"
-    #chef.add_recipe     "travis_build_environment"
-    #chef.add_recipe     "git"
-    #chef.add_recipe     "java::openjdk7"
-    #chef.add_recipe     "kerl"
+    chef.add_recipe     "git"
+    chef.add_recipe     "kerl"
   end
 
 end
