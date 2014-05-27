@@ -3,7 +3,13 @@ Vagrant.configure "2" do |config|
   # See https://github.com/mitchellh/vagrant/wiki/Available-Vagrant-Boxes for more boxes.
   config.vm.box      = "precise64_base"
   config.vm.box_url  = "http://files.vagrantup.com/precise64.box"
-  config.vm.hostname = "euc-mim-1"
+
+  # Define 4 machines for this tutorial.
+  ["mim-1", "mim-2", "tsung-1", "tsung-2"].each do |hostname|
+      config.vm.define hostname do |host|
+          host.vm.hostname = hostname
+      end
+  end
 
   # change default username if needed
   config.ssh.username = "vagrant"
