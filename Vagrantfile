@@ -58,11 +58,13 @@ Vagrant.configure "2" do |config|
 
     # List the recipies you are going to work on/need.
     chef.add_recipe     "apt"
+    chef.add_recipe     "build-essential"
     chef.add_recipe     "euc2014"
-    chef.add_recipe     "esl-packages"
-    chef.add_recipe     "esl-erlang"
     chef.add_recipe     "vim"
     chef.add_recipe     "git"
+    chef.add_recipe     "esl-packages"
+    chef.add_recipe     "esl-erlang"
+    chef.add_recipe     "tsung-git"
   end
 
 end
