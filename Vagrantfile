@@ -65,6 +65,7 @@ Vagrant.configure "2" do |config|
     chef.add_recipe     "esl-packages"
     chef.add_recipe     "esl-erlang"
     chef.add_recipe     "tsung-git"
+    chef.add_recipe     "mongooseim"
   end
 
 end
