@@ -23,29 +23,14 @@ TODO
 - two Tsungs, two MongooseIMs
 
 
-## Caveats and extra info
-
-- Tsung is dumb, it doesn't understand XMPP
-- 1024 open file descriptor limit (`ulimit -n`);
-  for more than 65k outgoing connections it's necessary to use multiple
-  virtual interfaces
-- Tsung controller is a single point of serialization -- severe delays
-  and test failures when generating massive load
-- log level debug and dump traffic to see actual XMPP stanzas
-- scripts for making graphs
-- the paths to ssh/erlang/Tsung must match on all machines for distributed
-  testing to work
-- XMPP version 1.0 by default advertised by Tsung causes ejabberd/MongooseIM
-  to refuse plain text authentication
-
-
 ## Setting up the environment
+
+**For VM management we'll need VirtualBox and Vagrant**;
+I used versions 4.3.10 and 1.5.3 respectively,
+when setting up the environment for the tutorial.
 
 We will use a set of up to 4 virtual machines for the tutorial:
 two will be used for load generation and two will be our system under test.
-For VM management we'll need VirtualBox and Vagrant;
-I used versions 4.3.10 and 1.5.3 respectively,
-when setting up the environment for the tutorial.
 
 Let's setup the tutorial repository and the first MongooseIM
 (system under test) VM:
@@ -53,12 +38,12 @@ Let's setup the tutorial repository and the first MongooseIM
     git clone git://github.com/lavrin/euc-2014.git euc-2014-tsung
     cd euc-2014-tsung
     git submodule update -i
-    vagrant up mim-1
+    vagrant up mim-1  # this will take a few minutes
 
 Hopefully, Vagrant finishes without errors.
 Before setting up another MongooseIM VM, let's bring the first server node up:
 
-    vagrant ssh mim-1  # this will take a few minutes
+    vagrant ssh mim-1
     sudo mongooseimctl start
     sudo mongooseimctl debug
 
@@ -106,12 +91,104 @@ We can do the same for the other node:
 
     telnet mim-2 5222
 
-If the environment is fine, then let's stop one of the nodes for now:
+We also need to set up the Tsung nodes:
 
-    vagrant halt mim-2
+    vagrant up tsung-1 tsung-2
+
+If the environment is fine, then let's stop some of the nodes for now:
+
+    vagrant halt mim-2 tsung-2
 
 
 ## Basic test scenario
+
+It's time we ran a basic Tsung test.
+Let's ssh into a Mongoose node in one shell and set up some trivial
+monitoring to see that the users actually get connected:
+
+    vagrant ssh mim-1
+    sudo mongooseimctl debug  # you server must be running for this to work
+
+Now in the Erlang shell that appears:
+
+    ejabberd_loglevel:set(4).
+    q().
+
+Again in Bash:
+
+    tail -f /usr/local/lib/mongooseim/log/ejabberd.log
+
+In a different shell window (try to have both of them on the screen at the
+same time) let's ssh into a Tsung node and run a basic scenario:
+
+    vagrant ssh tsung-1
+    mkdir tsung-logs  # tsung will fail without this
+    tsung -l tsung-logs -f tsung-scenarios/basic.xml start
+
+You guessed right, `-l` tells Tsung to store logs into the given directory;
+without it all your logs will go to `$HOME/.tsung/log`.
+
+`-f` just tells Tsung what XML scenario to use.
+
+Tsung will tell us that it's working with something similar to:
+
+    Starting Tsung
+    "Log directory is: /home/vagrant/tsung-logs/20140603-1520"
+
+We should now get a log message for each established/torn down
+connection in the console window where we have run `tail`:
+
+    2014-06-03 15:39:45.707 [info] <0.535.0>@ejabberd_listener:accept:279
+        (#Port<0.4574>) Accepted connection {{172,28,128,21},56051} ->
+        {{172,28,128,11},5222}
+
+    2014-06-03 15:39:47.809 [info] <0.867.0>@ejabberd_c2s:terminate:1610
+        ({socket_state,gen_tcp,#Port<0.4574>,<0.866.0>}) Close session for
+        user1@localhost/tsung
+
+This tells us that Tsung has actually sent some data to MongooseIM.
+How do we tell what this data was?
+At the top of `tsung-scenarios/basic.xml` scenario we see:
+
+    <tsung loglevel="debug" version="1.0" dumptraffic="true">
+
+Thanks to `dumptraffic="true"` we'll find a dump of all the stanzas Tsung
+exchanged with the server
+in `/home/vagrant/tsung-logs/20140603-1520/tsung.dump`.
+It's convenient for verifying what exactly your scenario does or for debugging,
+but **don't enable `dumptraffic` when actually load testing**
+as it generates a huge amount of data.
+
+Inside the directory with the results of the test we'll also find
+a number of log files:
+
+    vagrant@tsung-1:~$ ls -1 tsung-logs/20140603-1539/*.log
+    tsung-logs/20140603-1539/match.log
+    tsung-logs/20140603-1539/tsung0@tsung-1.log
+    tsung-logs/20140603-1539/tsung_controller@tsung-1.log
+    tsung-logs/20140603-1539/tsung.log
+
+`tsung.log` contains some statistics used to generate graphs after a test
+run is finished.
+
+`match.log` contains details about glob/regex matches (or match failures)
+done on replies from the server. In our case it's empty. More on that later.
+
+
+## Caveats and extra info
+
+- Tsung is dumb, it doesn't understand XMPP
+- 1024 open file descriptor limit (`ulimit -n`);
+  for more than 65k outgoing connections it's necessary to use multiple
+  virtual interfaces
+- Tsung controller is a single point of serialization -- severe delays
+  and test failures when generating massive load
+- log level debug and dump traffic to see actual XMPP stanzas
+- scripts for making graphs
+- the paths to ssh/erlang/Tsung must match on all machines for distributed
+  testing to work
+- XMPP version 1.0 by default advertised by Tsung causes ejabberd/MongooseIM
+  to refuse plain text authentication
 
 
 ## Troubleshooting
@@ -141,8 +218,8 @@ to bring a machine up or ssh to it:
         tsung-1: Warning: Connection timeout. Retrying...
         tsung-1: Warning: Connection timeout. Retrying...
 
-The only way to deal with this is to halt all the machines (might not
-be necessary) and kill the VirtualBox DHCP server:
+The only way I found out to deal with this is to kill
+the VirtualBox DHCP server:
 
     $ ps aux | grep -i vbox
     ...
