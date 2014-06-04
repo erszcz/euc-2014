@@ -4,7 +4,8 @@
 ## Who am I?
 
 - Radek Szymczyszyn <radoslaw.szymczyszyn@erlang-solutions.com>
-- ejabberd/MongooseIM engineer at Erlang Solutions Kraków
+- ejabberd/MongooseIM engineer
+  at [Erlang Solutions Kraków](https://www.erlang-solutions.com/)
 - github.com/lavrin
 
 
@@ -29,6 +30,7 @@ TODO
 I successfully tested the environment with versions 4.3.10 and 1.5.3 on MacOS X,
 and with 4.3.12 and 1.6.3 on Ubuntu 13.10.
 Please note that _there are unresolved issues_ when using older versions!
+I guess VirtualBox 4.3.x and Vagrant 1.5.y should suffice.
 
 We will use a set of up to 4 virtual machines for the tutorial:
 two will be used for load generation and two will be our system under test.
