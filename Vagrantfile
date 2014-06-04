@@ -27,7 +27,7 @@ Vagrant.configure "2" do |config|
   hosts.each do |host|
       config.vm.define host[:name] do |host_config|
           host_config.vm.hostname = host[:name]
-          config.vm.network "private_network", ip: host[:ip]
+          host_config.vm.network "private_network", ip: host[:ip]
       end
   end
 
