@@ -154,11 +154,11 @@ At the top of `tsung-scenarios/basic.xml` scenario we see:
     <tsung loglevel="debug" version="1.0" dumptraffic="true">
 
 Thanks to `dumptraffic="true"` we'll find a dump of all the stanzas Tsung
-exchanged with the server
-in `/home/vagrant/tsung-logs/20140603-1520/tsung.dump`.
+exchanged with the server in `tsung-logs/20140603-1520/tsung.dump`.
 It's convenient for verifying what exactly your scenario does or for debugging,
 but **don't enable `dumptraffic` when actually load testing**
 as it generates a huge amount of data.
+The same goes for log level `debug`, which controls the amount of logging.
 
 Inside the directory with the results of the test we'll also find
 a number of log files:
@@ -173,7 +173,16 @@ a number of log files:
 run is finished.
 
 `match.log` contains details about glob/regex matches (or match failures)
-done on replies from the server. In our case it's empty. More on that later.
+done on replies from the server.
+
+`tsung_controller@<...>.log` will tell us which nodes had problems
+starting when load generation distribution is enabled in the scenario,
+while `<nodename>.log` files contain node specific logs, e.g. crash logs
+explaining why some node hasn't responded to the controller.
+
+Apart from all the logs and statistics of a test run the result
+directory also contains a copy of the scenario Tsung was run with
+(in our case `tsung-logs/20140603-1520/basic.xml`).
 
 
 ## Caveats and extra info
@@ -186,7 +195,7 @@ done on replies from the server. In our case it's empty. More on that later.
   and test failures when generating massive load
 - log level debug and dump traffic to see actual XMPP stanzas
 - scripts for making graphs
-- the paths to ssh/erlang/Tsung must match on all machines for distributed
+- the paths to ssh/Erlang/Tsung must match on all machines for distributed
   testing to work
 - XMPP version 1.0 by default advertised by Tsung causes ejabberd/MongooseIM
   to refuse plain text authentication
