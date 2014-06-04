@@ -25,9 +25,10 @@ TODO
 
 ## Setting up the environment
 
-**For VM management we'll need VirtualBox and Vagrant**;
-I used versions 4.3.10 and 1.5.3 respectively,
-when setting up the environment for the tutorial.
+**For VM management we'll need VirtualBox and Vagrant**.
+I successfully tested the environment with versions 4.3.10 and 1.5.3 on MacOS X,
+and with 4.3.12 and 1.6.3 on Ubuntu 13.10.
+Please note that _there are unresolved issues_ when using older versions!
 
 We will use a set of up to 4 virtual machines for the tutorial:
 two will be used for load generation and two will be our system under test.
