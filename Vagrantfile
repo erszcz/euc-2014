@@ -31,6 +31,14 @@ Vagrant.configure "2" do |config|
       end
   end
 
+  # Don't use this by default but keep for convenience;
+  # if Vagrant can't ssh into the box the GUI is the only way to reset
+  # network interfaces.
+  config.vm.provider "virtualbox" do |v|
+    #v.gui = true
+    v.gui = false
+  end
+
   # change default username if needed
   config.ssh.username = "vagrant"
 
