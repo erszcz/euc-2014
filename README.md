@@ -206,7 +206,8 @@ directory also contains a copy of the scenario Tsung was run with
 ## Troubleshooting
 
 Vagrant might sometimes give you a "Connection timeout" error when trying
-to bring a machine up or ssh to it:
+to bring a machine up or ssh to it.
+This is an issue with DHCP and/or VirtualBox DHCP server:
 
     $ vagrant up tsung-1
     Bringing machine 'tsung-1' up with 'virtualbox' provider...
@@ -230,18 +231,56 @@ to bring a machine up or ssh to it:
         tsung-1: Warning: Connection timeout. Retrying...
         tsung-1: Warning: Connection timeout. Retrying...
 
-The only way I found out to deal with this is to kill
-the VirtualBox DHCP server:
+In such a case it's best to `vagrant halt -f <the-machine>`,
+toggle the `v.gui = false` switch to `v.gui = true`,
+and restart networking after logging in as user `vagrant`
+in the GUI window of the VM, e.g.:
 
-    $ ps aux | grep -i vbox
-    ...
-    erszcz           10242   0.0  0.0  2447920   5872   ??  S     3:06PM
-        0:00.07 /Applications/VirtualBox.app/Contents/MacOS/VBoxNetDHCP
-        --ip-address 172.28.128.2 --lower-ip 172.28.128.3 --mac-address
-        08:00:27:63:7D:35 --netmask 255.255.255.0
-        --network HostInterfaceNetworking-vboxnet2 --trunk-name vboxnet2
-        --trunk-type netadp --upper-ip 172.28.128.254
-    $ kill 10242
+    mim-1 login: vagrant
+    Password:
+    $ sudo /etc/init.d/networking restart
+
+This should make `vagrant ssh mim-1` work again.
+
+Alternatively, you can put the following into `~/.ssh/config`
+and use `ssh <host>` instead of `vagrant ssh <host>`:
+
+    Host mim-?
+        User vagrant
+        Port 22
+        UserKnownHostsFile /dev/null
+        StrictHostKeyChecking no
+        PasswordAuthentication no
+        IdentityFile ~/.vagrant.d/insecure_private_key
+        IdentitiesOnly yes
+        LogLevel FATAL
+
+    Host mim-1
+        HostName 172.28.128.11
+
+    Host mim-2
+        HostName 172.28.128.12
+
+    Host tsung-?
+        User vagrant
+        Port 22
+        UserKnownHostsFile /dev/null
+        StrictHostKeyChecking no
+        PasswordAuthentication no
+        IdentityFile ~/.vagrant.d/insecure_private_key
+        IdentitiesOnly yes
+        LogLevel FATAL
+
+    Host tsung-1
+        HostName 172.28.128.21
+
+    Host tsung-2
+        HostName 172.28.128.22
+
+However, this will only work after the host has successfully been
+booted at least once (VirtualBox needs to setup the new static
+interface and the only way to do that is through ssh on the DHCP-aware
+interface).
 
 
 ## Your opinion matters
