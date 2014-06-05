@@ -165,15 +165,3 @@ the situation might sometimes lead to a mismatch:
 the guest system tries to use a static address for a VirtualBox NAT adapter
 which ought to be configured via DHCP.
 This invalid setup leads to SSH failing to establish a connection.
-
-
-## Your opinion matters
-
-Thank you for taking part in the tutorial.
-I'd really appreciate if you sent me an email with a few words
-answering the questions below.
-If you're busy then one word per question is enough ;)
-
-- How did you like the tutorial?
-- How difficult do you consider the tutorial (too easy/hard/just right)?
-- What part of the tutorial needs improvement / more work?
