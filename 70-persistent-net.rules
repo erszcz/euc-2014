@@ -1,0 +1,5 @@
+# PCI device 0x1022:/sys/devices/pci0000:00/0000:00:03.0 (pcnet32)
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="pcnet32", ATTR{address}=="?*", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"
+
+# PCI device 0x8086:/sys/devices/pci0000:00/0000:00:08.0 (e1000)
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="e1000", ATTR{address}=="?*", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth1"
