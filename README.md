@@ -205,6 +205,9 @@ directory also contains a copy of the scenario Tsung was run with
 
 ## Troubleshooting
 
+
+### Vagrant can't `ssh` into a virtual machine
+
 Vagrant might sometimes give you a "Connection timeout" error when trying
 to bring a machine up or ssh to it.
 This is an issue with DHCP and/or VirtualBox DHCP server:
@@ -231,56 +234,52 @@ This is an issue with DHCP and/or VirtualBox DHCP server:
         tsung-1: Warning: Connection timeout. Retrying...
         tsung-1: Warning: Connection timeout. Retrying...
 
-In such a case it's best to `vagrant halt -f <the-machine>`,
-toggle the `v.gui = false` switch to `v.gui = true`,
-and restart networking after logging in as user `vagrant`
-in the GUI window of the VM, e.g.:
 
-    mim-1 login: vagrant
-    Password:
-    $ sudo /etc/init.d/networking restart
+**Trying again might work**
 
-This should make `vagrant ssh mim-1` work again.
+Issuing `vagrant halt -f <the-machine>` and `vagrant up <the-machine>`
+(possibly more than once) might make the machine accessible again.
 
-Alternatively, you can put the following into `~/.ssh/config`
-and use `ssh <host>` instead of `vagrant ssh <host>`:
 
-    Host mim-?
-        User vagrant
-        Port 22
-        UserKnownHostsFile /dev/null
-        StrictHostKeyChecking no
-        PasswordAuthentication no
-        IdentityFile ~/.vagrant.d/insecure_private_key
-        IdentitiesOnly yes
-        LogLevel FATAL
+**Manually reconfiguring will work, but it's troublesome**
 
-    Host mim-1
-        HostName 172.28.128.11
+If not, then it's necessary to `vagrant halt -f <the-machine>`,
+toggle the `v.gui = false` switch in `Vagrantfile` to `v.gui = true`
+and `vagrant up <the-machine>` again.
 
-    Host mim-2
-        HostName 172.28.128.12
+Once the GUI shows up we need to login with `vagrant:vagrant`
+and (as `root`) create file `/etc/udev/rules.d/70-persistent-net.rules`
+the contents of which must be as follows (one rule per line!):
 
-    Host tsung-?
-        User vagrant
-        Port 22
-        UserKnownHostsFile /dev/null
-        StrictHostKeyChecking no
-        PasswordAuthentication no
-        IdentityFile ~/.vagrant.d/insecure_private_key
-        IdentitiesOnly yes
-        LogLevel FATAL
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="pcnet32", ATTR{address}=="?*", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="e1000", ATTR{address}=="?*", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth1"
 
-    Host tsung-1
-        HostName 172.28.128.21
+Unfortunately, the GUI doesn't allow for copy-pasting the contents,
+so they have to be typed in.
+With this file in place, the machine should be SSH-accessible after the
+next reboot.
 
-    Host tsung-2
-        HostName 172.28.128.22
 
-However, this will only work after the host has successfully been
-booted at least once (VirtualBox needs to setup the new static
-interface and the only way to do that is through ssh on the DHCP-aware
-interface).
+**Destroying and recreating the machine will work, but takes some time**
+
+Alternatively, you might just `vagrant destroy <the-machine>`
+and recreate it following the steps from _Setting up the environment_.
+
+
+**Why does this happen?**
+
+This problem is caused by random ordering of the network devices detected
+at guest system boot up.
+That is, sometimes Adapter 1 is detected first and gets called `eth0`
+while Adapter 2 is `eth1` and sometimes it's the other way around.
+
+Since the guest network configuration is bound to `ethN` identifier,
+not to the device itself and the hypervisor network configuration is bound
+to adapter number (not the `ethN` identifier),
+the situation might sometimes lead to a mismatch:
+the guest system tries to use a static address for a VirtualBox NAT adapter
+which ought to be configured via DHCP.
+This invalid setup leads to SSH failing to establish a connection.
 
 
 ## Your opinion matters
