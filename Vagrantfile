@@ -51,11 +51,22 @@ Vagrant.configure "2" do |config|
     vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
   end
 
+  udev_persistent_net_path = "/etc/udev/rules.d/70-persistent-net.rules"
+  udev_persistent_net_rules = <<-EORULES
+    # PCI device 0x1022:/sys/devices/pci0000:00/0000:00:03.0 (pcnet32)
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="pcnet32", ATTR{address}=="?*", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"
+
+    # PCI device 0x8086:/sys/devices/pci0000:00/0000:00:08.0 (e1000)
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="e1000", ATTR{address}=="?*", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth1"
+  EORULES
+
   config.vm.provision :shell do |sh|
     sh.inline = <<-EOF
       sudo apt-get update
-      sudo apt-get install --no-install-recommends --assume-yes ruby1.9.1-dev build-essential
+      sudo apt-get install --no-install-recommends --assume-yes udev ruby1.9.1-dev build-essential
       [ -x "/opt/vagrant_ruby/bin/chef-solo" ] || gem install chef --no-ri --no-rdoc --no-user-install
+      [ -d "#{udev_persistent_net_path}" ] && rmdir "#{udev_persistent_net_path}"
+      echo '#{udev_persistent_net_rules}' > "#{udev_persistent_net_path}"
     EOF
   end
 
