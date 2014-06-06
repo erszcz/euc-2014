@@ -110,14 +110,27 @@ Let's ssh into a Mongoose node in one shell and set up some trivial
 monitoring to see that the users actually get connected:
 
     vagrant ssh mim-1
-    sudo mongooseimctl debug  # you server must be running for this to work
+    sudo mongooseimctl start  # only if your server is not running yet
+    sudo mongooseimctl debug
 
-Now in the Erlang shell that appears:
+If the server database hasn't been seeded with user credentials yet,
+then please look into `snippets.erl` in this directory for a snippet
+of code doing it - we can paste it into the debug shell we've just started:
+
+    %% Register users.
+    R = fun() -> Reg = fun ejabberd_admin:register/3,
+                 Numbers = [integer_to_binary(I) || I <- lists:seq(1,25000)],
+                 [Reg(<<"user", No/bytes>>, <<"localhost">>, <<"pass", No/bytes>>)
+                  || No <- Numbers] end.
+    R().
+    mnesia:table_info(passwd, size).
+
+Again in the Erlang shell:
 
     ejabberd_loglevel:set(4).
-    q().
+    ^C^C  %% i.e. press Control-C twice
 
-Again in Bash:
+Now in Bash:
 
     tail -f /usr/local/lib/mongooseim/log/ejabberd.log
 
@@ -125,8 +138,10 @@ In a different shell window (try to have both of them on the screen at the
 same time) let's ssh into a Tsung node and run a basic scenario:
 
     vagrant ssh tsung-1
-    mkdir tsung-logs  # tsung will fail without this
-    tsung -l tsung-logs -f tsung-scenarios/basic.xml start
+    git clone git://github.com/lavrin/tsung-scenarios
+    cd tsung-scenarios/
+    mkdir ~/tsung-logs  # the next command will fail without this
+    tsung -l ~/tsung-logs -f ~/tsung-scenarios/basic.xml start
 
 You guessed right, `-l` tells Tsung to store logs into the given directory;
 without it all your logs will go to `$HOME/.tsung/log`.
@@ -165,7 +180,7 @@ The same goes for log level `debug`, which controls the amount of logging.
 Inside the directory with the results of the test we'll also find
 a number of log files:
 
-    vagrant@tsung-1:~$ ls -1 tsung-logs/20140603-1539/*.log
+    vagrant@tsung-1:~$ ls -1 ~/tsung-logs/20140603-1539/*.log
     tsung-logs/20140603-1539/match.log
     tsung-logs/20140603-1539/tsung0@tsung-1.log
     tsung-logs/20140603-1539/tsung_controller@tsung-1.log
@@ -185,6 +200,67 @@ explaining why some node hasn't responded to the controller.
 Apart from all the logs and statistics of a test run the result
 directory also contains a copy of the scenario Tsung was run with
 (in our case `tsung-logs/20140603-1520/basic.xml`).
+
+Ok, we've seen one user logging in - that's hardly a load test.
+Let's make a node go down under load now!
+
+
+## Load testing a distributed service
+
+MongooseIM is actually quite resilient,
+so for the sake of making it go down under load,
+let's tweak its configuration a bit (first on `mim-1`,
+then on `mim-2`):
+
+    sudo chmod ugo+w /usr/local/lib/mongooseim/etc/vm.args
+    ls -l /usr/local/lib/mongooseim/etc/vm.args  # just to be sure
+    sudo echo '+hms 75000' >> /usr/local/lib/mongooseim/etc/vm.args
+
+This sets the process heap size to be ~75000 words of memory
+from the beginning.
+
+Let's make sure the server is running on both `mim-1` and `mim-2`:
+
+    sudo mongooseimctl live
+
+And turn on some, ekhm, _monitoring_ in the live Erlang shell:
+
+    %% Enable "monitoring".
+    F = fun(F, I) ->
+                Timestamp = calendar:now_to_local_time(erlang:now()),
+                NSessions = ejabberd_sm:get_vh_session_number(<<"localhost">>),
+                FreeRam = "free -m | sed '2q;d' | awk '{ print $4 }'",
+                io:format("~p ~p no of users: ~p, free ram: ~s",
+                          [I, Timestamp, NSessions, os:cmd(FreeRam)]),
+                timer:sleep(timer:seconds(2)),
+                F(F, I+1)
+        end.
+    G = fun() -> F(F, 1) end.
+    f(P).
+    P = spawn(G).
+
+Finally, on `tsung-1` let's run a scenario that should make `mim-1` crash
+due to memory exhaustion:
+
+    tsung -l ~/tsung-logs -f ~/tsung-scenarios/chat-4k.xml start
+
+And watch as `free ram` goes lower and lower on `mim-1`:
+
+    67 {{2014,6,6},{20,40,19}} no of users: 559, free ram: 570
+    ...
+    76 {{2014,6,6},{20,40,40}} no of users: 3105, free ram: 50
+    ...
+    82 {{2014,6,6},{20,41,3}} no of users: 3378, free ram: 48
+
+At ~3400 logged on users and ~50MiB of free RAM Linux OOM (out of memory)
+killer will kill MongooseIM.
+The console will probably be broken after that, let's fix it:
+
+    reset
+
+Please note, that `mim-2` also reported the number of users as ~3400,
+but didn't suffer - all the users were connected to `mim-1` due to the
+way `chat-4k.xml` scenario had been written.
 
 
 ## Caveats and extra info
