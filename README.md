@@ -324,7 +324,30 @@ gives us:
     /home/vagrant/tsung-logs/20140606-2040/chat-4k.xml
     /home/vagrant/tsung-logs/20140607-1231/chat-4k-2servers.xml
 
-Let's analyze the results of `20140606-2040/chat-4k.xml`:
+First, let's install the dependencies I had forgotten about:
+
+    sudo apt-get install --no-install-recommends gnuplot
+    sudo apt-get install libtemplate-perl
+
+Now, let's analyze the results of `20140606-2040/chat-4k.xml`:
+
+    cd ~/tsung-logs/20140606-2040
+    /usr/local/lib/tsung/bin/tsung_stats.pl --dygraph
+
+`--dygraph` gives nicer (and interactive) graphs, but requires Internet
+connection for viewing the report; we might drop it if the connection is poor.
+
+Let's do the same for the other result set:
+
+    cd ~/tsung-logs/20140607-1231
+    /usr/local/lib/tsung/bin/tsung_stats.pl --dygraph
+
+Let's start a simple HTTP server to see the results:
+
+    cd ~/tsung-logs
+    python -m SimpleHTTPServer 8080
+
+and point the browser at `localhost:8080`.
 
 ##
 
