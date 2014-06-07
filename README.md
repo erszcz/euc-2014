@@ -11,17 +11,27 @@
 
 ## What is load testing?
 
-TODO
+Types of performance testing:
 
-## What is Tsung?
+- testing under a specific load - what will be an average message delivery
+  time / rate on a 4 core, 64GiB RAM box with 100k users logged in and
+  exchanging messages with one another?
 
-## Exercises
+- stress testing - what is the maximum capacity of that box?
+  how many users can log in at the same time?
+  what number of users makes the message delivery time unacceptable?
 
-- one Tsung, one MongooseIM
+- spike testing - at ~9:00am people come to work; will the server be
+  resilient enough to sustain the number of logins to the corporate
+  IM network?
 
-- one Tsung, two MongooseIMs
+- endurance testing - the server has to run for weeks or months without
+  being stopped; does it have any memory leaks or errors leading to
+  resource exhaustion over extended periods of time?
 
-- two Tsungs, two MongooseIMs
+All in all, [Wikipedia will tell more ;)][wiki:perf]
+
+[wiki:perf]: http://en.wikipedia.org/wiki/Software_performance_testing
 
 
 ## Setting up the environment
