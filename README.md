@@ -201,7 +201,7 @@ Apart from all the logs and statistics of a test run the result
 directory also contains a copy of the scenario Tsung was run with
 (in our case `tsung-logs/20140603-1520/basic.xml`).
 
-Ok, we've seen one user logging in - that's hardly a load test.
+OK, we've seen one user logging in - that's hardly a load test.
 Let's make a node go down under load now!
 
 
@@ -319,7 +319,7 @@ Let's find the interesting ones:
 
     find ~/tsung-logs/ -name chat-4k.xml -o -name chat-4k-2servers.xml
 
-gives us:
+Gives us:
 
     /home/vagrant/tsung-logs/20140606-2040/chat-4k.xml
     /home/vagrant/tsung-logs/20140607-1231/chat-4k-2servers.xml
@@ -347,7 +347,7 @@ Let's start a simple HTTP server to see the results:
     cd ~/tsung-logs
     python -m SimpleHTTPServer 8080
 
-and point the browser at `localhost:8080`.
+And point the browser at `localhost:8080`.
 
 ##
 
