@@ -205,7 +205,7 @@ Ok, we've seen one user logging in - that's hardly a load test.
 Let's make a node go down under load now!
 
 
-## Load testing a distributed service
+## Stress testing a MongooseIM node until it breaks
 
 MongooseIM is actually quite resilient,
 so for the sake of making it go down under load,
@@ -254,13 +254,96 @@ And watch as `free ram` goes lower and lower on `mim-1`:
 
 At ~3400 logged on users and ~50MiB of free RAM Linux OOM (out of memory)
 killer will kill MongooseIM.
-The console will probably be broken after that, let's fix it:
+Depending on the safety requirements, ~2000-3000 users is the upper limit
+per node with this hardware setup.
+Please note that without changing the per-process heap size I wasn't
+able to bring the node down with ~12k users connected simultaneously.
+
+The console will probably be broken now, let's fix it and make sure the
+node is started again (with _monitoring_ - please paste the snippet again):
 
     reset
+    sudo mongooseimctl live
 
 Please note, that `mim-2` also reported the number of users as ~3400,
 but didn't suffer - all the users were connected to `mim-1` due to the
 way `chat-4k.xml` scenario had been written.
+
+
+## Load testing a distributed service
+
+Let's now perform the test again, but distribute the generated load among
+both nodes of the cluster. On `tsung-1`:
+
+    tsung -l ~/tsung-logs -f ~/tsung-scenarios/chat-4k-2servers.xml
+
+After about a minute both nodes should report more or less
+the same statistic:
+
+    4153 {{2014,6,6},{23,7,27}} no of users: 4000, free ram: 55
+
+In my case `mim-2` has died ~2m20s later:
+
+    5270 {{2014,6,6},{23,9,43}} no of users: 4000, free ram: 48
+
+`mim-1` realized that about ~30s later:
+
+    4219 {{2014,6,6},{23,10,23}} no of users: 1992, free ram: 65
+
+And itself went down after another ~35s:
+
+    4236 {{2014,6,6},{23,10,59}} no of users: 1992, free ram: 49
+    (mongooseim@mim-1)7> Killed
+
+This tells us that 4000 users chatting with one another is too much
+even when split more or less equally among two server nodes.
+Don't forget these nodes are configured to perform worse than they could
+for the sake of the demo!
+
+If the nodes haven't crashed that would be the moment to perform some
+extra measurements under sustained load,
+e.g. measurement of the average response time.
+Knowing that the users can connect to the service is one thing,
+but knowing that the message sent from one to another doesn't take
+forever to reach the addressee is another!
+
+Unfortunately, since Tsung doesn't understand XMPP,
+it falls short in this regard.
+
+
+## Plotting the results
+
+We now have two potentially interesting sets of results to analyze.
+We might have accumulated quite a lot of result directories in `~/tsung-logs`.
+Let's find the interesting ones:
+
+    find ~/tsung-logs/ -name chat-4k.xml -o -name chat-4k-2servers.xml
+
+gives us:
+
+    /home/vagrant/tsung-logs/20140606-2040/chat-4k.xml
+    /home/vagrant/tsung-logs/20140607-1231/chat-4k-2servers.xml
+
+Let's analyze the results of `20140606-2040/chat-4k.xml`:
+
+##
+
+TODO: scaling vertically: virtual interfaces
+
+
+##
+
+TODO: still too little firepower? distribute load generation
+
+
+##
+
+TODO: matches, embedding Erlang, calling out to Erlang
+
+
+## Checklist
+
+TODO: fill in
 
 
 ## Caveats and extra info
