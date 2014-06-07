@@ -363,6 +363,7 @@ Let's start a simple HTTP server to see the results:
 
 And point the browser at `localhost:8080`.
 
+
 ## Scaling Tsung vertically
 
 ### Max open file descriptor limit
@@ -493,9 +494,68 @@ We have to use:
 Each IP address allows for generating up to ~65k extra simultaneous connections.
 
 
-##
+## Scaling Tsung horizontally
 
-TODO: still too little firepower? distribute load generation
+Adding extra IP addresses allows for generating more load from a single
+Tsung node.
+But what if the hardware of that node can't handle simulating more
+clients?
+We have to use more machines.
+
+Prerequisites: all machines Tsung is to control must have
+passwordless ssh login enabled (e.g. by exchanging public keys),
+exactly the same location of Erlang and Tsung binaries and exactly
+the same user (name) created in the system.
+
+Since these VMs are created with Vagrant and Chef, the paths and the user
+name will match, but we need to ssh from `tsung-1` to `tsung-2` and enable
+passwordless login:
+
+    ssh-keygen
+    ssh-copy-id tsung-2
+    ssh tsung-2
+
+Making Tsung scale horizontally is a matter of adjusting the scenario file:
+
+```xml
+<clients>
+    <client host="tsung-1" maxusers="200000"/>
+    <client host="tsung-2" maxusers="200000"/>
+</clients>
+```
+
+Then, we can run the scenario:
+
+    tsung -l ~/tsung-logs -f ~/tsung-scenarios/scaling-horizontally.xml start
+
+The result directory will now contain one more log file:
+
+    ls ~/tsung-logs/20140607-1535/*.log
+    /home/vagrant/tsung-logs/20140607-1535/match.log
+    /home/vagrant/tsung-logs/20140607-1535/tsung0@tsung-2.log  # <-- remote tsung node
+    /home/vagrant/tsung-logs/20140607-1535/tsung1@tsung-1.log
+    /home/vagrant/tsung-logs/20140607-1535/tsung_controller@tsung-1.log
+    /home/vagrant/tsung-logs/20140607-1535/tsung.log
+
+And inside `tsung_controller@tsung-1.log` we should be able to find the
+following lines:
+
+    =INFO REPORT==== 7-Jun-2014::15:35:58 ===
+        ts_config_server:(5:<0.73.0>) Remote beam started on node 'tsung1@tsung-1'
+
+    =INFO REPORT==== 7-Jun-2014::15:35:58 ===
+        ts_config_server:(5:<0.72.0>) Remote beam started on node 'tsung0@tsung-2'
+
+Unfortunately, the centralized nature of Tsung controller might turn out
+to be a bottleneck in cases of multiple nodes. Your mileage may vary.
+
+Alternatively, it's possible to simply start Tsung on multiple nodes with
+the same scenario without reliance on Tsung controller.
+This requires more manual setup (or some scripting and ssh) and doesn't
+provide consolidated results from the Tsung side,
+but might be enough for stressing the server up to a certain point
+and gathering statistics on the server side (e.g. using `sar`,
+DTrace or SystemTap).
 
 
 ##
@@ -504,11 +564,6 @@ TODO: matches, embedding Erlang, calling out to Erlang
 
 
 ## Checklist
-
-TODO: fill in
-
-
-## Caveats and extra info
 
 - Tsung is dumb, it doesn't understand XMPP
 - 1024 open file descriptor limit (`ulimit -n`);
