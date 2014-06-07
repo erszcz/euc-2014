@@ -349,9 +349,134 @@ Let's start a simple HTTP server to see the results:
 
 And point the browser at `localhost:8080`.
 
-##
+## Scaling Tsung vertically
 
-TODO: scaling vertically: virtual interfaces
+### Max open file descriptor limit
+
+One of the often encountered problems with scaling up is the enigmatic
+barrier of ~1000 connected users.
+The server side error logs may look something like this:
+
+    5 {{2014,6,7},{14,28,33}} no of users: 724, free ram: 482
+    (mongooseim@mim-1)5> 2014-06-07 14:28:36.335 [error] <0.237.0> CRASH REPORT Process <0.237.0> with 0 neighbours exited with reason: {failed,{error,{file_error,"/usr/local/lib/mongooseim/Mnesia.mongooseim@mim-1/LATEST.LOG",emfile}}} in disk_log:reopen/3 in disk_log:do_exit/4 line 1188
+    2014-06-07 14:28:36.336 [error] <0.88.0> Supervisor disk_log_sup had child disk_log started with {disk_log,istart_link,undefined} at <0.237.0> exit with reason {failed,{error,{file_error,"/usr/local/lib/mongooseim/Mnesia.mongooseim@mim-1/LATEST.LOG",emfile}}} in disk_log:reopen/3 in context child_terminated
+    2014-06-07 14:28:36.341 [error] <0.26.0> File operation error: emfile. Target: ./pg2.beam. Function: get_file. Process: code_server.
+    2014-06-07 14:28:36.343 [error] <0.26.0> File operation error: emfile. Target: /usr/local/lib/mongooseim/lib/kernel-3.0/ebin/pg2.beam. Function: get_file. Process: code_server.
+    ...
+    {"Kernel pid terminated",application_controller,"{application_terminated,mnesia,killed}"}
+
+    Crash dump was written to: erl_crash.dump
+    Kernel pid terminated (application_controller) ({application_terminated,mnesia,killed})
+
+Essentially, that's the default operating system limit of at most 1024
+open file descriptors per process.
+We can see the exact limit with:
+
+    ulimit -n
+
+The hosts in this demo environment already have this limited raised to
+300k descriptors per process, but for the sake of experiment let's lower
+it again:
+
+    ulimit -n 1024
+    sudo mongooseimctl live
+
+Run Tsung:
+
+    tsung -l ~/tsung-logs -f ~/tsung-scenarios/chat-4k.xml start
+
+And wait a few seconds for a few screens of errors from MongooseIM.
+
+Of course, this limit may bite us on the Tsung side as well.
+Both load generating and _attacked_ hosts need to have it altered.
+To permanently set it to a different number than the default 1024
+we have to modify `/etc/security/limits.conf`:
+
+    cat /etc/security/limits.conf
+
+    ...
+    vagrant         soft    nofile          300000
+    vagrant         hard    nofile          300000
+    mongooseim      soft    nofile          300000
+    mongooseim      hard    nofile          300000
+
+### Virtual interfaces
+
+There's another limit we'll run into when reaching the number of ~65k
+concurrent users coming from a single Tsung machine - the number
+of TCP ports available per network interface.
+
+To overcome this limit we'll have to use multiple virtual interfaces
+and IP addresses for one physical NIC.
+
+To setup/tear down an extra virtual interface on MacOS X:
+
+    $ sudo ifconfig
+    lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> mtu 16384
+        options=3<RXCSUM,TXCSUM>
+        inet6 ::1 prefixlen 128
+        inet 127.0.0.1 netmask 0xff000000
+        inet6 fe80::1%lo0 prefixlen 64 scopeid 0x1
+        nd6 options=1<PERFORMNUD>
+    ...
+
+    $ sudo ifconfig lo0 alias 127.0.1.1  # sets up the new interface/alias
+    $ sudo ifconfig
+    lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> mtu 16384
+        options=3<RXCSUM,TXCSUM>
+        inet6 ::1 prefixlen 128
+        inet 127.0.0.1 netmask 0xff000000
+        inet6 fe80::1%lo0 prefixlen 64 scopeid 0x1
+        inet 127.0.1.1 netmask 0xff000000  # <--- the new alias for lo0
+        nd6 options=1<PERFORMNUD>
+    ...
+
+    $ sudo ifconfig lo0 -alias 127.0.1.1  # tears down an interface/alias
+
+To do the same on Linux:
+
+    $ sudo ifconfig
+    ...
+    eth1      Link encap:Ethernet  HWaddr 08:00:27:79:85:a2
+              inet addr:172.28.128.21  Bcast:172.28.128.255  Mask:255.255.255.0
+              UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+              RX packets:49189 errors:0 dropped:0 overruns:0 frame:0
+              TX packets:73245 errors:0 dropped:0 overruns:0 carrier:0
+              collisions:0 txqueuelen:1000
+              RX bytes:10496764 (10.4 MB)  TX bytes:10596956 (10.5 MB)
+    ...
+
+    $ sudo ifconfig eth1:1 add 172.28.128.31
+    $ sudo ifconfig
+    ...
+    eth1:1:0  Link encap:Ethernet  HWaddr 08:00:27:79:85:a2
+              inet addr:172.28.128.31  Bcast:0.0.0.0  Mask:0.0.0.0
+              UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+    ...
+
+    $ sudo ifconfig eth1:1:0 down
+
+In order to tell Tsung to use these interfaces we need to adjust the
+scenario file. Instead of:
+
+```xml
+<clients>
+    <client host="tsung-1" maxusers="200000"/>
+</clients>
+```
+
+We have to use:
+
+```xml
+<clients>
+    <client host="tsung-1" maxusers="200000">
+        <ip value="172.28.128.21"/>
+        <ip value="172.28.128.31"/>
+    </client>
+</clients>
+```
+
+Each IP address allows for generating up to ~65k extra simultaneous connections.
 
 
 ##
