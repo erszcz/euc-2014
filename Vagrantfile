@@ -31,6 +31,10 @@ Vagrant.configure "2" do |config|
       end
   end
 
+  config.vm.define "tsung-1" do |tsung_1|
+      tsung_1.vm.network "forwarded_port", guest: 8080, host: 8080
+  end
+
   # Don't use this by default but keep for convenience;
   # if Vagrant can't ssh into the box the GUI is the only way to reset
   # network interfaces.
