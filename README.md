@@ -390,7 +390,7 @@ And wait a few seconds for a few screens of errors from MongooseIM.
 Of course, this limit may bite us on the Tsung side as well.
 Both load generating and _attacked_ hosts need to have it altered.
 To permanently set it to a different number than the default 1024
-we have to modify `/etc/security/limits.conf`:
+we have to modify `/etc/security/limits.conf` and login again:
 
     cat /etc/security/limits.conf
 
