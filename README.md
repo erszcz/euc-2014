@@ -323,6 +323,10 @@ it falls short in this regard.
 
 ## Plotting the results
 
+There are two tools for plotting Tsung results:
+Perlish `tsung_stats.pl` and Pythonic `tsplot`.
+We'll user `tsung_stats.pl`.
+
 We now have two potentially interesting sets of results to analyze.
 We might have accumulated quite a lot of result directories in `~/tsung-logs`.
 Let's find the interesting ones:
@@ -512,10 +516,11 @@ TODO: fill in
   virtual interfaces
 - Tsung controller is a single point of serialization -- severe delays
   and test failures when generating massive load
-- log level debug and dump traffic to see actual XMPP stanzas
-- scripts for making graphs
-- the paths to ssh/Erlang/Tsung must match on all machines for distributed
-  testing to work
+- log level `debug` and `dumptraffic="true"` to see actual XMPP
+  stanzas/HTTP requests
+- `tsplot` and `tsung_stats.pl` for making graphs
+- the paths to ssh/Erlang/Tsung and user names must match on all machines
+  for distributed testing to work
 - XMPP version 1.0 by default advertised by Tsung causes ejabberd/MongooseIM
   to refuse plain text authentication
 
