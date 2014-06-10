@@ -34,6 +34,12 @@ All in all, [Wikipedia will tell more ;)][wiki:perf]
 [wiki:perf]: http://en.wikipedia.org/wiki/Software_performance_testing
 
 
+## Tsung
+
+- GitHub: [https://github.com/processone/tsung](https://github.com/processone/tsung)
+- Documentation: [http://tsung.erlang-projects.org/user_manual/index.html](http://tsung.erlang-projects.org/user_manual/index.html)
+
+
 ## Setting up the environment (with a good network connection)
 
 **For VM management we'll need VirtualBox and Vagrant**.
