@@ -34,7 +34,7 @@ All in all, [Wikipedia will tell more ;)][wiki:perf]
 [wiki:perf]: http://en.wikipedia.org/wiki/Software_performance_testing
 
 
-## Setting up the environment
+## Setting up the environment (with a good network connection)
 
 **For VM management we'll need VirtualBox and Vagrant**.
 I successfully tested the environment with versions 4.3.10 and 1.5.3 on MacOS X,
@@ -111,6 +111,33 @@ We also need to set up the Tsung nodes:
 If the environment is fine, then let's stop some of the nodes for now:
 
     vagrant halt mim-2 tsung-2
+
+
+## Setting up the environment (from a USB stick)
+
+In case you're setting up the environment from a provided USB stick,
+you'll still need [VirtualBox](https://www.virtualbox.org/)
+and [Vagrant](https://vagrantup.com/).
+
+Once these are installed, please clone the tutorial repository
+and follow the next steps:
+
+    git clone https://github.com/lavrin/euc-2014
+    cd euc-2014
+    cp -R /usb-stick-mountpoint/euc-2014/.vagrant .
+
+Apart from `.vagrant` directory, we will need the VirtualBox VMs.
+Copy them from the USB stick to `~/VirtualBox VMs`.
+Preferably don't do it from the shell, as this will show no progress indicator.
+
+Once the VMs are copied, let's verify that they start up without errors:
+
+    cd euc-2014
+    vagrant up
+
+Please don't issue `vagrant up` before the machines are copied!
+VirtualBox won't find the machine and Vagrant will try to provision it,
+overwriting the data in `.vagrant` directory.
 
 
 ## Basic test scenario
