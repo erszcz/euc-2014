@@ -591,9 +591,32 @@ and gathering statistics on the server side (e.g. using `sar`,
 DTrace or SystemTap).
 
 
-##
+## Extending Tsung scenarios with Erlang
 
-TODO: matches, embedding Erlang, calling out to Erlang
+Let's say we want to write the following scenario for Tsung:
+
+- assumption: the user has some privacy lists defined on the server,
+- fetch all the privacy lists,
+- choose one of them and set it as the default list.
+
+Before we get to writing the scenario let's first take care of the
+assumption that user has some privacy lists defined.
+On `mim-1` or `mim-2`:
+
+    wget https://raw.githubusercontent.com/lavrin/euc-2014/master/privacy.erl
+    erlc privacy.erl
+    sudo mongooseimctl live
+
+In the Erlang shell:
+
+    privacy:inject_lists(binary, "user", "localhost", 5).
+
+Let's run Tsung:
+
+    tsung -l ~/tsung-logs -f ~/tsung-scenarios/extending.xml start
+
+We can now compare the contents of `dump.log` with calls done in
+`extending.xml` and implementations of the functions in `tsung_privacy.erl`.
 
 
 ## Checklist
