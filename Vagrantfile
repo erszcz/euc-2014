@@ -8,12 +8,8 @@ hosts = [
         :ip => "172.28.128.12"
     },
     {
-        :name => "tsung-1",
-        :ip => "172.28.128.21"
-    },
-    {
-        :name => "tsung-2",
-        :ip => "172.28.128.22"
+        :name => "mim-3",
+        :ip => "172.28.128.13"
     }
 ]
 
@@ -29,10 +25,6 @@ Vagrant.configure "2" do |config|
           host_config.vm.hostname = host[:name]
           host_config.vm.network "private_network", ip: host[:ip]
       end
-  end
-
-  config.vm.define "tsung-1" do |tsung_1|
-      tsung_1.vm.network "forwarded_port", guest: 8080, host: 8080
   end
 
   # Don't use this by default but keep for convenience;
@@ -87,7 +79,6 @@ Vagrant.configure "2" do |config|
     chef.add_recipe     "git"
     chef.add_recipe     "esl-packages"
     chef.add_recipe     "esl-erlang"
-    chef.add_recipe     "tsung-git"
     chef.add_recipe     "mongooseim"
   end
 
