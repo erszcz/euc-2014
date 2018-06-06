@@ -4,9 +4,9 @@
 ## Who am I?
 
 - Radek Szymczyszyn <radoslaw.szymczyszyn@erlang-solutions.com>
-- ejabberd/MongooseIM engineer
+- XMPP/MongooseIM engineer
   at [Erlang Solutions Kraków](https://www.erlang-solutions.com/)
-- github.com/lavrin
+- github.com/erszcz / twitter.com/erszcz / medium.com/@erszcz
 
 
 ## What is load testing?
