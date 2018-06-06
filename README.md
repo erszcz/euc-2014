@@ -6,7 +6,7 @@
 - Radek Szymczyszyn <radoslaw.szymczyszyn@erlang-solutions.com>
 - XMPP/MongooseIM engineer
   at [Erlang Solutions Kraków](https://www.erlang-solutions.com/)
-- github.com/erszcz / twitter.com/erszcz / medium.com/@erszcz
+- [github.com/erszcz](https://github.com/erszcz) / [twitter.com/erszcz](https://twitter.com/erszcz) / [medium.com/@erszcz](https://medium.com/@erszcz)
 
 
 ## What is load testing?
